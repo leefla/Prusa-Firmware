@@ -629,6 +629,17 @@ void planner_abort_hard()
     waiting_inside_plan_buffer_line_print_aborted = true;
 }
 
+uint32_t gcd(uint32_t a, uint32_t b)
+{
+	while ((a %= b) && (b %= a));
+	return (a + b);
+}
+
+uint32_t lcm(uint32_t a, uint32_t b)
+{
+	return a * b / gcd(a, b);
+}
+
 float junction_deviation = 0.1;
 // Add a new linear movement to the buffer. steps_x, _y and _z is the absolute position in 
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
@@ -782,6 +793,17 @@ block->steps_y.wide = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-p
 #endif
   block->steps_z.wide = labs(target[Z_AXIS]-position[Z_AXIS]);
   block->steps_e.wide = labs(target[E_AXIS]-position[E_AXIS]);
+
+  // We don't just need the max number of steps on any single axis, we need the lowest common multiple of the steps on all axis
+  // since otherwise we'll try to align lower-frequency steps to the single highest-frequency step axis, which will cause issues if the steps are not even multiples
+  // An example is if the axis stepper needs steps at 0.4ms interval, and the extruder needs steps at 4.7ms interval, then since we're basing the steps on the interval of the axis
+  // the stepper will get many steps at 4.8ms (multiple of 0.4ms) and then an odd step at a 4.4ms (the next lowest multiple of 0.4ms), effectively causing a 10% extrusion variation
+  
+  //const uint32_t maxAxisSteps = max(block->steps_x.wide, max(block->steps_y.wide, block->steps_z.wide));
+  //uint32_t eventCount = lcm(maxAxisSteps, block->steps_e.wide);
+  //eventCount = min(eventCount, maxAxisSteps * 5); // If we're generating too many events, then clamp it to 5x the number of steps needed for the linear axis
+  //block->step_event_count.wide = eventCount;
+
   block->step_event_count.wide = max(block->steps_x.wide, max(block->steps_y.wide, max(block->steps_z.wide, block->steps_e.wide)));
 
   // Bail if this is a zero-length block
@@ -1050,16 +1072,16 @@ Having the real displacement of the head, we can calculate the total movement le
   // Acceleration of the segment, in mm/sec^2
   block->acceleration = block->acceleration_st / steps_per_mm;
 
-#if 0
+#if 1
   // Oversample diagonal movements by a power of 2 up to 8x
   // to achieve more accurate diagonal movements.
   uint8_t bresenham_oversample = 1;
   for (uint8_t i = 0; i < 3; ++ i) {
     if (block->nominal_rate >= 5000) // 5kHz
       break;
-    block->nominal_rate << 1;
-    bresenham_oversample << 1;
-    block->step_event_count << 1;
+    block->nominal_rate <<= 1;
+    bresenham_oversample <<= 1;
+    block->step_event_count.wide <<= 1;
   }
   if (bresenham_oversample > 1)
     // Lower the acceleration steps/sec^2 to account for the oversampling.
