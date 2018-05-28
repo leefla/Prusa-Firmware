@@ -1053,10 +1053,11 @@ Having the real displacement of the head, we can calculate the total movement le
 
 #if 1
   // Oversample diagonal movements by a power of 2 up to 8x
-  // to achieve more accurate diagonal movements.
+  // to achieve better extruder stepper linearity (assuming that the extruder step interval is not a perfect multiple of the axis step interval)
+  // This will currently make sure the 
   uint8_t bresenham_oversample = 1;
   for (uint8_t i = 0; i < 3; ++ i) {
-    if (block->nominal_rate >= 5000) // 5kHz
+    if (block->nominal_rate >= 3750) // Only increase if below 3.75KHz (to limit to between 3.75KHz and 7.5KHz)
       break;
     block->nominal_rate <<= 1;
     bresenham_oversample <<= 1;
