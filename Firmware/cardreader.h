@@ -19,9 +19,9 @@ public:
   //this is to delay autostart and hence the initialisaiton of the sd card to some seconds after the normal init, so the device is available quick after a reset
 
   void checkautostart(bool x); 
-  void openFile(char* name,bool read,bool replace_current=true);
-  void openLogFile(char* name);
-  void removeFile(char* name);
+  void openFile(const char* name,bool read,bool replace_current=true);
+  void openLogFile(const char* name);
+  void removeFile(const char* name);
   void closefile(bool store_location=false);
   void release();
   void startFileprint();
@@ -133,7 +133,7 @@ private:
 
 #ifdef DEBUG_SD_SPEED_TEST
 public:
-#endif DEBUG_SD_SPEED_TEST
+#endif //DEBUG_SD_SPEED_TEST
   Sd2Card card;
 
 private:
