@@ -1891,6 +1891,15 @@ void lcd_preheat_abs()
   setWatch(); // heater sanity check timer
 }
 
+void lcd_preheat_pc()
+{
+  setTargetHotend0(PC_PREHEAT_HOTEND_TEMP);
+  setTargetBed(PC_PREHEAT_HPB_TEMP);
+  fanSpeed = 0;
+  lcd_return_to_status();
+  setWatch(); // heater sanity check timer	
+}
+
 void lcd_preheat_pp()
 {
   setTargetHotend0(PP_PREHEAT_HOTEND_TEMP);
@@ -2159,8 +2168,9 @@ static void lcd_preheat_menu()
 	  MENU_ITEM_FUNCTION_P(PSTR("PLA  -  " STRINGIFY(PLA_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PLA_PREHEAT_HPB_TEMP)), lcd_preheat_pla);
 	  MENU_ITEM_FUNCTION_P(PSTR("PET  -  " STRINGIFY(PET_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PET_PREHEAT_HPB_TEMP)), lcd_preheat_pet);
 	  MENU_ITEM_FUNCTION_P(PSTR("ABS  -  " STRINGIFY(ABS_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(ABS_PREHEAT_HPB_TEMP)), lcd_preheat_abs);
-	  MENU_ITEM_FUNCTION_P(PSTR("HIPS -  " STRINGIFY(HIPS_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(HIPS_PREHEAT_HPB_TEMP)), lcd_preheat_hips);
-	  MENU_ITEM_FUNCTION_P(PSTR("PP   -  " STRINGIFY(PP_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PP_PREHEAT_HPB_TEMP)), lcd_preheat_pp);
+	  MENU_ITEM_FUNCTION_P(PSTR("PC   -  " STRINGIFY(PC_PREHEAT_HOTEND_TEMP)  "/" STRINGIFY(PC_PREHEAT_HPB_TEMP)),  lcd_preheat_pc);
+//	  MENU_ITEM_FUNCTION_P(PSTR("HIPS -  " STRINGIFY(HIPS_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(HIPS_PREHEAT_HPB_TEMP)), lcd_preheat_hips);
+//	  MENU_ITEM_FUNCTION_P(PSTR("PP   -  " STRINGIFY(PP_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PP_PREHEAT_HPB_TEMP)), lcd_preheat_pp);
 	  MENU_ITEM_FUNCTION_P(PSTR("FLEX -  " STRINGIFY(FLEX_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(FLEX_PREHEAT_HPB_TEMP)), lcd_preheat_flex);
 	  MENU_ITEM_FUNCTION_P(_T(MSG_COOLDOWN), lcd_cooldown);
   }
@@ -5260,11 +5270,11 @@ void unload_filament()
 
 	//		extr_unload2();
 
-	current_position[E_AXIS] -= 45;
+	current_position[E_AXIS] -= 32; //!< Skelestruder - was 45
 	plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 5200 / 60, active_extruder);
 	st_synchronize();
-	current_position[E_AXIS] -= 15;
-	plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 1000 / 60, active_extruder);
+	current_position[E_AXIS] -= 10; //!< Skelestruder - was 15
+	plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 100 / 60, active_extruder); //!< Skelestruder - was 1000 / 60
 	st_synchronize();
 	current_position[E_AXIS] -= 20;
 	plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 1000 / 60, active_extruder);

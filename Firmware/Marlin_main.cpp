@@ -3177,7 +3177,7 @@ void gcode_M701()
 		st_synchronize();
 
 		if (current_position[Z_AXIS] < 20) current_position[Z_AXIS] += 30;
-		current_position[E_AXIS] += 30;
+		current_position[E_AXIS] += 20; //<- Skelestruder (was 30)
 		plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 400 / 60, active_extruder); //fast sequence
 		st_synchronize();
 		current_position[E_AXIS] += 25;
@@ -4608,6 +4608,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
                 SERIAL_PROTOCOLPGM("\nZ search height: ");
                 SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH);
                 SERIAL_PROTOCOLLNPGM("\nMeasured points:");
+				
                 for (int y = MESH_NUM_Y_POINTS-1; y >= 0; y--) {
                     for (int x = 0; x < MESH_NUM_X_POINTS; x++) {
                         SERIAL_PROTOCOLPGM("  ");
@@ -6753,7 +6754,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 		gcode_M701();
 	}
 	break;
-	case 702:
+	case 702: //M702: unload filament
 	{
 		if (mmu_enabled)
 		{
