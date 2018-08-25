@@ -3139,11 +3139,6 @@ void gcode_M600(bool automatic, float x_position, float y_position, float z_shif
       //Move Z back
       plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], current_position[E_AXIS], FILAMENTCHANGE_ZFEED, active_extruder);
       st_synchronize();  
-      
-	  //Unretract
-      current_position[E_AXIS]= current_position[E_AXIS] - e_shift;
-      plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], current_position[E_AXIS], FILAMENTCHANGE_RFEED, active_extruder);
-	  st_synchronize();
 
       //Set E position to original  
       plan_set_e_position(lastpos[E_AXIS]);
@@ -6810,7 +6805,7 @@ if (mmu_enabled)
 		  mmu_command(MMU_CMD_T0 + tmp_extruder);
 
 		  manage_response(true, true);
-
+		  mmu_command(MMU_CMD_C0);
     	  mmu_extruder = tmp_extruder; //filament change is finished
 
 		  if (*(strchr_pointer + index) == '?')// for single material usage with mmu

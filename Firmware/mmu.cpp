@@ -19,10 +19,12 @@ extern char choose_extruder_menu();
 
 #define MMU_TODELAY 100
 #define MMU_TIMEOUT 10
+#define MMU_CMD_TIMEOUT 300000ul //milliseconds (5min timeout)
 
 #define MMU_HWRESET
 #define MMU_RST_PIN 76
 
+#define MMU_REQUIRED_FW_BUILDNR 81
 
 bool mmu_enabled = false;
 
@@ -137,6 +139,9 @@ void mmu_loop(void)
 		{
 			fscanf_P(uart2io, PSTR("%u"), &mmu_buildnr); //scan buildnr from buffer
 			printf_P(PSTR("MMU => '%dok'\n"), mmu_buildnr);
+			bool version_valid = mmu_check_version();
+			if (!version_valid) mmu_show_warning();
+			else puts_P(PSTR("MMU version valid"));
 			puts_P(PSTR("MMU <= 'P0'"));
 		    mmu_puts_P(PSTR("P0\n")); //send 'read finda' request
 			mmu_state = -4;
@@ -162,6 +167,19 @@ void mmu_loop(void)
 				mmu_printf_P(PSTR("T%d\n"), extruder);
 				mmu_state = 3; // wait for response
 			}
+			else if ((mmu_cmd >= MMU_CMD_L0) && (mmu_cmd <= MMU_CMD_L4))
+			{
+			    int filament = mmu_cmd - MMU_CMD_L0;
+			    printf_P(PSTR("MMU <= 'L%d'\n"), filament);
+			    mmu_printf_P(PSTR("L%d\n"), filament);
+			    mmu_state = 3; // wait for response
+			}
+			else if (mmu_cmd == MMU_CMD_C0)
+			{
+				printf_P(PSTR("MMU <= 'C0'\n"));
+				mmu_puts_P(PSTR("C0\n")); //send continue loading
+				mmu_state = 3;
+			}
 			mmu_cmd = 0;
 		}
 		else if ((mmu_last_response + 1000) < millis()) //request every 1s
@@ -180,7 +198,7 @@ void mmu_loop(void)
 			if (mmu_cmd == 0)
 				mmu_ready = true;
 		}
-		else if ((mmu_last_request + 30000) < millis())
+		else if ((mmu_last_request + MMU_CMD_TIMEOUT) < millis())
 		{ //resend request after timeout (30s)
 			mmu_state = 1;
 		}
@@ -188,11 +206,11 @@ void mmu_loop(void)
 	case 3: //response to commands T0-T4
 		if (mmu_rx_ok() > 0)
 		{
-			printf_P(PSTR("MMU => 'ok'\n"), mmu_finda);
+			printf_P(PSTR("MMU => 'ok'\n"));
 			mmu_ready = true;
 			mmu_state = 1;
 		}
-		else if ((mmu_last_request + 30000) < millis())
+		else if ((mmu_last_request + MMU_CMD_TIMEOUT) < millis())
 		{ //resend request after timeout (30s)
 			mmu_state = 1;
 		}
@@ -396,6 +414,7 @@ void mmu_M600_load_filament(bool automatic)
 		  mmu_command(MMU_CMD_T0 + tmp_extruder);
 
 		  manage_response(false, true);
+		  mmu_command(MMU_CMD_C0);
     	  mmu_extruder = tmp_extruder; //filament change is finished
 
 		  mmu_load_to_nozzle();
@@ -479,8 +498,13 @@ void display_loading()
 void extr_adj(int extruder) //loading filament for SNMM
 {
 #ifndef SNMM
-    printf_P(PSTR("L%d \n"),extruder);
-    fprintf_P(uart2io, PSTR("L%d\n"), extruder);
+    uint8_t cmd = MMU_CMD_L0 + extruder;
+    if (cmd > MMU_CMD_L4)
+    {
+        printf_P(PSTR("Filament out of range %d \n"),extruder);
+        return;
+    }
+    mmu_command(cmd);
 	
 	//show which filament is currently loaded
 	
@@ -490,7 +514,7 @@ void extr_adj(int extruder) //loading filament for SNMM
 	//if(strlen(_T(MSG_LOADING_FILAMENT))>18) lcd.setCursor(0, 1);
 	//else lcd.print(" ");
 	lcd_print(" ");
-	lcd_print(mmu_extruder + 1);
+	lcd_print(extruder + 1);
 
 	// get response
 	manage_response(false, false);
@@ -806,4 +830,15 @@ void extr_unload_4()
 {
 	change_extr(4);
 	extr_unload();
+}
+
+bool mmu_check_version()
+{
+	return (mmu_buildnr >= MMU_REQUIRED_FW_BUILDNR);
+}
+
+void mmu_show_warning()
+{
+	printf_P(PSTR("MMU2 firmware version invalid. Required version: build number %d or higher."), MMU_REQUIRED_FW_BUILDNR);
+	kill(_i("Please update firmware in your MMU2. Waiting for reset."));
 }

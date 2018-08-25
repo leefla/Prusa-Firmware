@@ -123,7 +123,7 @@ static void lcd_control_temperature_preheat_pla_settings_menu();
 static void lcd_control_temperature_preheat_abs_settings_menu();
 static void lcd_control_motion_menu();
 static void lcd_control_volumetric_menu();
-//static void lcd_settings_menu_back();
+static void lcd_settings_linearity_correction_menu_save();
 
 static void prusa_stat_printerstatus(int _status);
 static void prusa_stat_farm_number();
@@ -2100,9 +2100,7 @@ static void lcd_support_menu()
 		uint8_t ip[4];                 // 4bytes
 		char ip_str[3*4+3+1];          // 16bytes
 	} _menu_data_t;
-#if (22 > MENU_DATA_SIZE)
-#error "check MENU_DATA_SIZE definition!"
-#endif
+    static_assert(sizeof(menu_data)>= sizeof(_menu_data_t),"_menu_data_t doesn't fit into menu_data");
 	_menu_data_t* _md = (_menu_data_t*)&(menu_data[0]);
     if (_md->status == 0 || lcd_draw_update == 2)
 	{
@@ -2431,6 +2429,7 @@ static void lcd_menu_AutoLoadFilament()
     }
     else
     {
+        static_assert(sizeof(menu_data)>=sizeof(ShortTimer), "ShortTimer doesn't fit into menu_data");
 		ShortTimer* ptimer = (ShortTimer*)&(menu_data[0]);
         if (!ptimer->running()) ptimer->start();
         lcd_set_cursor(0, 0);
@@ -2547,9 +2546,7 @@ static void _lcd_move(const char *name, int axis, int min, int max)
 		bool initialized;              // 1byte
 		bool endstopsEnabledPrevious;  // 1byte
 	} _menu_data_t;
-#if (2 > MENU_DATA_SIZE)
-#error "check MENU_DATA_SIZE definition!"
-#endif
+	static_assert(sizeof(menu_data)>= sizeof(_menu_data_t),"_menu_data_t doesn't fit into menu_data");
 	_menu_data_t* _md = (_menu_data_t*)&(menu_data[0]);
 	if (!_md->initialized)
 	{
@@ -2753,9 +2750,7 @@ static void _lcd_babystep(int axis, const char *msg)
 		int babystepMem[3];            // 6bytes
 		float babystepMemMM[3];        // 12bytes
 	} _menu_data_t;
-#if (19 > MENU_DATA_SIZE)
-#error "check MENU_DATA_SIZE definition!"
-#endif
+	static_assert(sizeof(menu_data)>= sizeof(_menu_data_t),"_menu_data_t doesn't fit into menu_data");
 	_menu_data_t* _md = (_menu_data_t*)&(menu_data[0]);
 	if (_md->status == 0)
 	{
@@ -2836,16 +2831,14 @@ static void lcd_babystep_z()
 
 typedef struct
 {	// 12bytes + 9bytes = 21bytes total
-	uint8_t reserved[MENU_DATA_EDIT_SIZE]; //12 bytes reserved for number editing functions
+    menu_data_edit_t reserved; //12 bytes reserved for number editing functions
 	int8_t status;                   // 1byte
 	int16_t left;                    // 2byte
 	int16_t right;                   // 2byte
 	int16_t front;                   // 2byte
 	int16_t rear;                    // 2byte
 } _menu_data_adjust_bed_t;
-#if (21 > MENU_DATA_SIZE)
-#error "check MENU_DATA_SIZE definition!"
-#endif
+static_assert(sizeof(menu_data)>= sizeof(_menu_data_adjust_bed_t),"_menu_data_adjust_bed_t doesn't fit into menu_data");
 
 void lcd_adjust_bed_reset(void)
 {
@@ -4505,28 +4498,26 @@ void lcd_wizard(int state) {
 	lcd_return_to_status();
 	lcd_update(2);
 }
-/*
+
 void lcd_settings_linearity_correction_menu(void)
 {
 	MENU_BEGIN();
-	if (menu_item_back_P(_T(MSG_MAIN)))
-	{
-		lcd_settings_menu_back();
-		return;
-	}
-//	MENU_ITEM_BACK_P(_T(MSG_SETTINGS));
+	MENU_ITEM_BACK_P(_T(MSG_SETTINGS));
 #ifdef TMC2130_LINEARITY_CORRECTION_XYZ
 	//tmc2130_wave_fac[X_AXIS]
-	int corr[4] = {tmc2130_wave_fac[X_AXIS], tmc2130_wave_fac[Y_AXIS], tmc2130_wave_fac[Z_AXIS], tmc2130_wave_fac[E_AXIS]};
 
-	MENU_ITEM_EDIT_int3_P(_i("X-correct"),  &corr[X_AXIS],  TMC2130_WAVE_FAC1000_MIN-TMC2130_WAVE_FAC1000_STP, TMC2130_WAVE_FAC1000_MAX);////MSG_EXTRUDER_CORRECTION c=9 r=0
-	MENU_ITEM_EDIT_int3_P(_i("Y-correct"),  &corr[Y_AXIS],  TMC2130_WAVE_FAC1000_MIN-TMC2130_WAVE_FAC1000_STP, TMC2130_WAVE_FAC1000_MAX);////MSG_EXTRUDER_CORRECTION c=9 r=0
-	MENU_ITEM_EDIT_int3_P(_i("Z-correct"),  &corr[Z_AXIS],  TMC2130_WAVE_FAC1000_MIN-TMC2130_WAVE_FAC1000_STP, TMC2130_WAVE_FAC1000_MAX);////MSG_EXTRUDER_CORRECTION c=9 r=0
+	MENU_ITEM_EDIT_int3_P(_i("X-correct"),  &tmc2130_wave_fac[X_AXIS],  TMC2130_WAVE_FAC1000_MIN-TMC2130_WAVE_FAC1000_STP, TMC2130_WAVE_FAC1000_MAX);////MSG_EXTRUDER_CORRECTION c=9 r=0
+	MENU_ITEM_EDIT_int3_P(_i("Y-correct"),  &tmc2130_wave_fac[Y_AXIS],  TMC2130_WAVE_FAC1000_MIN-TMC2130_WAVE_FAC1000_STP, TMC2130_WAVE_FAC1000_MAX);////MSG_EXTRUDER_CORRECTION c=9 r=0
+	MENU_ITEM_EDIT_int3_P(_i("Z-correct"),  &tmc2130_wave_fac[Z_AXIS],  TMC2130_WAVE_FAC1000_MIN-TMC2130_WAVE_FAC1000_STP, TMC2130_WAVE_FAC1000_MAX);////MSG_EXTRUDER_CORRECTION c=9 r=0
 #endif //TMC2130_LINEARITY_CORRECTION_XYZ
-	MENU_ITEM_EDIT_int3_P(_i("E-correct"),  &corr[E_AXIS],  TMC2130_WAVE_FAC1000_MIN-TMC2130_WAVE_FAC1000_STP, TMC2130_WAVE_FAC1000_MAX);////MSG_EXTRUDER_CORRECTION c=9 r=0
+	MENU_ITEM_EDIT_int3_P(_i("E-correct"),  &tmc2130_wave_fac[E_AXIS],  TMC2130_WAVE_FAC1000_MIN-TMC2130_WAVE_FAC1000_STP, TMC2130_WAVE_FAC1000_MAX);////MSG_EXTRUDER_CORRECTION c=9 r=0
 	MENU_END();
+	if(menu_leaving)
+	{
+	    lcd_settings_linearity_correction_menu_save();
+	}
 }
-*/
+
 static void lcd_settings_menu()
 {
 	EEPROM_read(EEPROM_SILENT, (uint8_t*)&SilentModeMenu, sizeof(SilentModeMenu));
@@ -4597,7 +4588,7 @@ static void lcd_settings_menu()
 		else MENU_ITEM_SUBMENU_P(_T(MSG_CRASHDETECT_NA), lcd_crash_mode_info);
 	}
 
-//  MENU_ITEM_SUBMENU_P(_i("Lin. correction"), lcd_settings_linearity_correction_menu);
+    MENU_ITEM_SUBMENU_P(_i("Lin. correction"), lcd_settings_linearity_correction_menu);
 #endif //TMC2130
 
   if (temp_cal_active == false)
@@ -4682,8 +4673,8 @@ static void lcd_ustep_linearity_menu_save()
 }
 #endif //TMC2130
 
-/*
-static void lcd_settings_menu_back()
+
+static void lcd_settings_linearity_correction_menu_save()
 {
 #ifdef TMC2130
     bool changed = false;
@@ -4698,10 +4689,8 @@ static void lcd_settings_menu_back()
     lcd_ustep_linearity_menu_save();
     if (changed) tmc2130_init();
 #endif //TMC2130
-    menu_menu = lcd_main_menu;
-//    lcd_main_menu();
 }
-*/
+
 
 static void lcd_calibration_menu()
 {
@@ -5681,16 +5670,14 @@ static void lcd_colorprint_change() {
 static void lcd_tune_menu()
 {
 	typedef struct
-	{	// 3bytes total
-		// To recognize, whether the menu has been just initialized.
-		int8_t  status;                                 // 1byte
-		// Backup of extrudemultiply, to recognize, that the value has been changed and
-		// it needs to be applied.
-		int16_t extrudemultiply;                        // 2byte
+	{
+	    menu_data_edit_t reserved; //!< reserved for number editing functions
+		int8_t  status; //!< To recognize, whether the menu has been just initialized.
+		//! Backup of extrudemultiply, to recognize, that the value has been changed and
+		//! it needs to be applied.
+		int16_t extrudemultiply;
 	} _menu_data_t;
-#if (3 > MENU_DATA_SIZE)
-#error "check MENU_DATA_SIZE definition!"
-#endif
+	static_assert(sizeof(menu_data)>= sizeof(_menu_data_t),"_menu_data_t doesn't fit into menu_data");
 	_menu_data_t* _md = (_menu_data_t*)&(menu_data[0]);
 	if (_md->status == 0)
 	{
