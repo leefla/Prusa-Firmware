@@ -97,7 +97,7 @@
 
 //Silent mode limits
 #define SILENT_MAX_ACCEL_XY      960ul  // max acceleration in silent mode in mm/s^2
-#define SILENT_MAX_FEEDRATE_XY   172  // max feedrate in mm/s
+#define SILENT_MAX_FEEDRATE_XY   100  // max feedrate in mm/s
 
 //Normal mode limits
 #define NORMAL_MAX_ACCEL_XY     2500ul  // max acceleration in normal mode in mm/s^2
@@ -180,6 +180,7 @@
 #define CMD_DIAGNOSTICS //Show cmd queue length on printer display
 #endif /* DEBUG_BUILD */
 
+#define LINEARITY_CORRECTION
 #define TMC2130_LINEARITY_CORRECTION
 #define TMC2130_LINEARITY_CORRECTION_XYZ
 //#define TMC2130_VARIABLE_RESOLUTION
@@ -612,5 +613,7 @@
 
 //#define SUPPORT_VERBOSITY
 #define DEBUG_DISABLE_FORCE_SELFTEST //<- Skelestruder - disable force selftest
+
+//#define MMU_DEBUG //print communication between MMU2 and printer on serial
 
 #endif //__CONFIGURATION_PRUSA_H

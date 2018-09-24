@@ -29,6 +29,14 @@ extern int16_t mmu_buildnr;
 #define MMU_CMD_L3   0x23
 #define MMU_CMD_L4   0x24
 #define MMU_CMD_C0   0x30
+#define MMU_CMD_U0   0x40
+#define MMU_CMD_E0   0x50
+#define MMU_CMD_E1   0x51
+#define MMU_CMD_E2   0x52
+#define MMU_CMD_E3   0x53
+#define MMU_CMD_E4   0x54
+#define MMU_CMD_R0   0x60
+
 
 extern int mmu_puts_P(const char* str);
 
@@ -55,7 +63,7 @@ extern void manage_response(bool move_axes, bool turn_off_nozzle);
 extern void mmu_load_to_nozzle();
 
 extern void mmu_M600_load_filament(bool automatic);
-
+extern void mmu_M600_wait_and_beep();
 
 extern void extr_mov(float shift, float feed_rate);
 extern void change_extr(int extr);
@@ -83,4 +91,9 @@ extern void extr_unload_4();
 
 extern bool mmu_check_version();
 extern void mmu_show_warning();
-
+extern void mmu_eject_filament(uint8_t filament, bool recover);
+extern void mmu_eject_fil_0();
+extern void mmu_eject_fil_1();
+extern void mmu_eject_fil_2();
+extern void mmu_eject_fil_3();
+extern void mmu_eject_fil_4();
