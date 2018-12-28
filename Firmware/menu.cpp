@@ -10,6 +10,7 @@
 #include "Marlin.h"
 #include "ultralcd.h"
 #include "language.h"
+#include "static_assert.h"
 
 
 
@@ -236,6 +237,7 @@ uint8_t menu_item_function_P(const char* str, menu_func_t func)
 		if (menu_clicked && (lcd_encoder == menu_item))
 		{
 			menu_clicked = false;
+			lcd_consume_click();
 			lcd_update_enabled = 0;
 			if (func) func();
 			lcd_update_enabled = 1;

@@ -85,7 +85,7 @@
 #define SHEET_PRINT_ZERO_REF_Y -2.f
 
 #define DEFAULT_MAX_FEEDRATE                {500, 500, 12, 320}      //<- Skelestruder - was  {200, 200, 12, 120} // (mm/sec)   max feedrate (M203)
-#define DEFAULT_MAX_FEEDRATE_SILENT         {172, 172, 12, 120}      // (mm/sec)   max feedrate (M203), silent mode
+#define DEFAULT_MAX_FEEDRATE_SILENT         {100, 100, 12, 120}      // (mm/sec)   max feedrate (M203), silent mode
 
 #define DEFAULT_MAX_ACCELERATION            {5000, 5000, 200, 5000}  //<- Skelestruder - was {1000, 1000, 200, 5000} // (mm/sec^2) max acceleration (M201)
 #define DEFAULT_MAX_ACCELERATION_SILENT     {960, 960, 200, 5000}    // (mm/sec^2) max acceleration (M201), silent mode
@@ -110,7 +110,7 @@
 
 //Crash detection
 #define CRASHDET_TIMER 45 //seconds
-#define CRASHDET_COUNTER_MAX 3 
+#define CRASHDET_COUNTER_MAX 3
 
 // New XYZ calibration
 #define NEW_XYZCAL
@@ -132,7 +132,7 @@
 #define PAT9125
 #define FILAMENT_SENSOR
 
-// Backlash - 
+// Backlash -
 //#define BACKLASH_X
 //#define BACKLASH_Y
 
@@ -155,15 +155,15 @@
 #define DEBUG_STACK_MONITOR        //Stack monitor in stepper ISR
 //#define DEBUG_FSENSOR_LOG          //Reports fsensor status to serial
 //#define DEBUG_CRASHDET_COUNTERS  //Display crash-detection counters on LCD
-//#define DEBUG_RESUME_PRINT       //Resume/save print debug enable 
-//#define DEBUG_UVLO_AUTOMATIC_RECOVER // Power panic automatic recovery debug output 
+//#define DEBUG_RESUME_PRINT       //Resume/save print debug enable
+//#define DEBUG_UVLO_AUTOMATIC_RECOVER // Power panic automatic recovery debug output
 //#define DEBUG_DISABLE_XMINLIMIT  //x min limit ignored
 //#define DEBUG_DISABLE_XMAXLIMIT  //x max limit ignored
 //#define DEBUG_DISABLE_YMINLIMIT  //y min limit ignored
 //#define DEBUG_DISABLE_YMAXLIMIT  //y max limit ignored
 //#define DEBUG_DISABLE_ZMINLIMIT  //z min limit ignored
 //#define DEBUG_DISABLE_ZMAXLIMIT  //z max limit ignored
-#define DEBUG_DISABLE_STARTMSGS //no startup messages 
+#define DEBUG_DISABLE_STARTMSGS //no startup messages
 //#define DEBUG_DISABLE_MINTEMP   //mintemp error ignored
 //#define DEBUG_DISABLE_SWLIMITS  //sw limits ignored
 //#define DEBUG_DISABLE_LCD_STATUS_LINE  //empty four lcd line
@@ -179,6 +179,9 @@
 #define PLANNER_DIAGNOSTICS // Show the planner queue status on printer display.
 #define CMD_DIAGNOSTICS //Show cmd queue length on printer display
 #endif /* DEBUG_BUILD */
+
+//#define FSENSOR_QUALITY
+
 
 #define LINEARITY_CORRECTION
 #define TMC2130_LINEARITY_CORRECTION
@@ -251,9 +254,11 @@
 //new settings is possible for vsense = 1, running current value > 31 set vsense to zero and shift both currents by 1 bit right (Z axis only)
 #define TMC2130_CURRENTS_H {20, 20, 25, 30} //<- Skelestruder - was {16, 20, 35, 30}  // default holding currents for all axes
 #define TMC2130_CURRENTS_R {20, 20, 25, 30} //<- Skelestruder - was {16, 20, 35, 30}  // default running currents for all axes
-#define TMC2130_UNLOAD_CURRENT_R 12			 // lowe current for M600 to protect filament sensor 
+#define TMC2130_UNLOAD_CURRENT_R 12			 // lowe current for M600 to protect filament sensor
 
 #define TMC2130_STEALTH_Z
+
+//#define TMC2130_SERVICE_CODES_M910_M918
 
 //#define TMC2130_DEBUG
 //#define TMC2130_DEBUG_WR
@@ -296,7 +301,7 @@
 #endif
 
 // Extrude mintemp
-#define EXTRUDE_MINTEMP 190
+#define EXTRUDE_MINTEMP 175
 
 // Extruder cooling fans
 #define EXTRUDER_0_AUTO_FAN_PIN   8
@@ -333,12 +338,13 @@
 #define FILAMENTCHANGE_FIRSTRETRACT -2
 #define FILAMENTCHANGE_FINALRETRACT -80
 
-#define FILAMENTCHANGE_FIRSTFEED 70
-#define FILAMENTCHANGE_FINALFEED 50
+#define FILAMENTCHANGE_FIRSTFEED 70 //E distance in mm for fast filament loading sequence used used in filament change (M600)
+#define FILAMENTCHANGE_FINALFEED 25 //E distance in mm for slow filament loading sequence used used in filament change (M600) and filament load (M701)
 #define FILAMENTCHANGE_RECFEED 5
 
 #define FILAMENTCHANGE_XYFEED 50
-#define FILAMENTCHANGE_EFEED 20
+#define FILAMENTCHANGE_EFEED_FIRST 20 // feedrate in mm/s for fast filament loading sequence used in filament change (M600)
+#define FILAMENTCHANGE_EFEED_FINAL 3.3f // feedrate in mm/s for slow filament loading sequence used in filament change (M600) and filament load (M701)
 //#define FILAMENTCHANGE_RFEED 400
 #define FILAMENTCHANGE_RFEED 7000 / 60
 #define FILAMENTCHANGE_EXFEED 2
@@ -368,16 +374,8 @@
  MOTOR CURRENT SETTINGS
  *------------------------------------*/
 
-// Motor Current setting for BIG RAMBo
-#define DIGIPOT_MOTOR_CURRENT {135,135,135,135,135} // Values 0-255 (RAMBO 135 = ~0.75A, 185 = ~1A)
-#define DIGIPOT_MOTOR_CURRENT_LOUD {135,135,135,135,135}
-
-// Motor Current settings for RAMBo mini PWM value = MotorCurrentSetting * 255 / range
-#if MOTHERBOARD == BOARD_RAMBO_MINI_1_0 || MOTHERBOARD == BOARD_RAMBO_MINI_1_3
-#define MOTOR_CURRENT_PWM_RANGE 2000
-#define DEFAULT_PWM_MOTOR_CURRENT  {400, 750, 750} // {XY,Z,E}
-#define DEFAULT_PWM_MOTOR_CURRENT_LOUD  {400, 750, 750} // {XY,Z,E}
-#endif
+// Motor Current settings for Einsy/tmc = 0..63
+#define MOTOR_CURRENT_PWM_RANGE 63
 
 /*------------------------------------
  BED SETTINGS
@@ -604,8 +602,8 @@
 // The following example, 12 * (4 * 16 / 400) = 12 * 0.16mm = 1.92mm.
 //#define UVLO_Z_AXIS_SHIFT 1.92
 #define UVLO_Z_AXIS_SHIFT 0.64
-// If power panic occured, and the current temperature is higher then target temperature before interrupt minus this offset, print will be recovered automatically. 
-#define AUTOMATIC_UVLO_BED_TEMP_OFFSET 5 
+// If power panic occured, and the current temperature is higher then target temperature before interrupt minus this offset, print will be recovered automatically.
+#define AUTOMATIC_UVLO_BED_TEMP_OFFSET 5
 
 #define HEATBED_V2
 
@@ -614,6 +612,8 @@
 //#define SUPPORT_VERBOSITY
 #define DEBUG_DISABLE_FORCE_SELFTEST //<- Skelestruder - disable force selftest
 
+#define MMU_REQUIRED_FW_BUILDNR 83
+#define MMU_HWRESET
 //#define MMU_DEBUG //print communication between MMU2 and printer on serial
 
 #endif //__CONFIGURATION_PRUSA_H
